@@ -1,0 +1,82 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <climits>
+using namespace std;
+void min_reduction(vector<int>& arr) {
+int min_value = INT_MAX;
+#pragma omp parallel for reduction(min: min_value)
+for (int i = 0; i < arr.size(); i++) {
+if (arr[i] < min_value) {
+min_value = arr[i];
+}
+}
+cout << "Minimum value: " << min_value << endl;
+}
+void max_reduction(vector<int>& arr) {
+int max_value = INT_MIN;
+#pragma omp parallel for reduction(max: max_value)
+for (int i = 0; i < arr.size(); i++) {
+if (arr[i] > max_value) {
+max_value = arr[i];
+}
+}
+cout << "Maximum value: " << max_value << endl;
+}
+void sum_reduction(vector<int>& arr) {
+int sum = 0;
+#pragma omp parallel for reduction(+: sum)
+for (int i = 0; i < arr.size(); i++) {
+sum += arr[i];
+}
+cout << "Sum: " << sum << endl;
+}
+void average_reduction(vector<int>& arr) {
+int sum = 0;
+#pragma omp parallel for reduction(+: sum)
+for (int i = 0; i < arr.size(); i++) {
+sum += arr[i];
+}
+cout << "Average: " << (double)sum / arr.size() << endl;
+}
+int main() {
+vector<int> arr;
+arr.push_back(5);
+arr.push_back(2);
+arr.push_back(9);
+arr.push_back(1);
+arr.push_back(7);
+arr.push_back(6);
+arr.push_back(8);
+arr.push_back(3);
+arr.push_back(4);
+min_reduction(arr);
+max_reduction(arr);
+sum_reduction(arr);
+average_reduction(arr);
+}
+
+
+
+
+The provided code demonstrates the use of OpenMP reductions to calculate various statistics (minimum value, maximum value, sum, and average) of a given vector (arr) in parallel. Let's go through the code step by step:
+
+The code includes several header files: <iostream>, <vector>, <omp.h>, and <climits>. These are standard C++ libraries used for input/output, working with vectors, OpenMP parallelization, and defining integer limits, respectively.
+
+The min_reduction function calculates the minimum value in the vector arr using OpenMP reduction. The min_value variable is initialized to the maximum possible integer value (INT_MAX). The #pragma omp parallel for reduction(min: min_value) directive parallelizes the loop and performs a reduction operation on min_value, where each thread keeps track of the minimum value it encounters. After the loop, the minimum value is printed.
+
+The max_reduction function calculates the maximum value in the vector arr using OpenMP reduction. The max_value variable is initialized to the minimum possible integer value (INT_MIN). The #pragma omp parallel for reduction(max: max_value) directive parallelizes the loop and performs a reduction operation on max_value, where each thread keeps track of the maximum value it encounters. After the loop, the maximum value is printed.
+
+The sum_reduction function calculates the sum of all elements in the vector arr using OpenMP reduction. The sum variable is initialized to 0. The #pragma omp parallel for reduction(+: sum) directive parallelizes the loop and performs a reduction operation on sum, where each thread accumulates the sum of its assigned elements. After the loop, the sum is printed.
+
+The average_reduction function calculates the average value of the elements in the vector arr using OpenMP reduction. The sum variable is initialized to 0. The #pragma omp parallel for reduction(+: sum) directive parallelizes the loop and performs a reduction operation on sum, where each thread accumulates the sum of its assigned elements. After the loop, the average is calculated by dividing the sum by the size of the vector and printed.
+
+In the main function, a vector arr is created and initialized with a sequence of integers.
+
+The min_reduction, max_reduction, sum_reduction, and average_reduction functions are called sequentially to calculate the minimum value, maximum value, sum, and average of the vector arr using OpenMP reductions.
+
+The calculated statistics are printed to the console.
+
+The program terminates with a return value of 0.
+
+The code demonstrates how OpenMP reductions can be used to perform parallel reductions on shared variables, allowing efficient computation of various statistics in parallel. By utilizing multiple threads, the reduction operations are performed concurrently, potentially improving the performance compared to sequential calculations.

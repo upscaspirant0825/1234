@@ -1,0 +1,100 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <chrono>
+
+using namespace std;
+
+void bubbleSort(vector<int>& arr) {
+  int n = arr.size();
+
+  #pragma omp parallel for
+  for (int i = 0; i < n - 1; i++) {
+    for (int j = 0; j < n - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        int temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of elements: ";
+  cin >> n;
+
+  vector<int> arr(n);
+
+  for (int i = 0; i < n; i++) {
+    cout << "Enter element " << i + 1 << ": ";
+    cin >> arr[i];
+  }
+
+  cout << "Unsorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Bubble sort.
+  cout << "Sequential bubble sort: ";
+  auto start = std::chrono::high_resolution_clock::now();
+  bubbleSort(arr);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+  
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Parallel bubble sort.
+  cout << "Parallel bubble sort: ";
+  start = std::chrono::high_resolution_clock::now();
+  #pragma omp parallel
+  bubbleSort(arr);
+  end = std::chrono::high_resolution_clock::now();
+  elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+
+  return 0;
+}
+
+
+
+The provided code implements the bubble sort algorithm and compares its sequential and parallel execution using OpenMP. Let's go through the code step by step:
+
+The code includes several header files: <iostream>, <vector>, <omp.h>, and <chrono>. These are standard C++ libraries used for input/output, working with vectors, OpenMP parallelization, and measuring time, respectively.
+
+The bubbleSort function performs the bubble sort algorithm on a given vector (arr). It iterates through the elements of the vector and swaps adjacent elements if they are in the wrong order. The largest element "bubbles" to the end of the vector in each iteration.
+
+Inside the bubbleSort function, the outer loop for (int i = 0; i < n - 1; i++) controls the number of iterations. The variable i represents the number of elements already sorted at the end of the vector.
+
+The inner loop for (int j = 0; j < n - i - 1; j++) compares adjacent elements and swaps them if they are in the wrong order. The variable j represents the current index being compared.
+
+The #pragma omp parallel for directive is used to parallelize the outer loop of the bubble sort algorithm. OpenMP distributes the iterations of the loop among multiple threads for concurrent execution. Each thread executes a subset of the loop iterations.
+
+In the main function, the number of elements in the array (n) is obtained from the user.
+
+A vector (arr) is created to store the elements entered by the user.
+
+The user is prompted to enter each element of the array.
+
+The unsorted array is printed.
+
+Sequential Bubble Sort: The sequential bubble sort algorithm is executed on the array. The start time is recorded using std::chrono::high_resolution_clock::now(), and the end time is recorded after the sorting process. The duration of the sorting process is calculated using std::chrono::duration<double>. The sorted array is printed.
+
+Parallel Bubble Sort: The parallel bubble sort algorithm is executed on the array. The #pragma omp parallel directive creates a parallel region, and the bubbleSort function is called within it. This parallelizes the sorting process using multiple threads. The start time is recorded, and the end time is obtained after the sorting process. The duration is calculated, and the sorted array is printed.
+
+The program terminates with a return value of 0.
+
+The code demonstrates the use of OpenMP to parallelize the bubble sort algorithm and compare its performance with the sequential version. However, it's important to note that the bubble sort algorithm is not efficient for large arrays and is mainly used for educational purposes. Other sorting algorithms like quicksort or mergesort are more commonly used for practical purposes due to their superior performance.
+
+
+
+
+

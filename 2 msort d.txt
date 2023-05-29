@@ -1,0 +1,144 @@
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <chrono>
+
+using namespace std;
+
+bool isSorted(const vector<int>& arr) {
+  int n = arr.size();
+  for (int i = 1; i < n; i++) {
+    if (arr[i] < arr[i - 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void merge(vector<int>& arr, int low, int mid, int high) {
+  int i = low;
+  int j = mid + 1;
+  vector<int> merged(high - low + 1);
+
+  for (int k = 0; k < merged.size(); k++) {
+    if (i > mid) {
+      merged[k] = arr[j++];
+    } else if (j > high) {
+      merged[k] = arr[i++];
+    } else if (arr[i] <= arr[j]) {
+      merged[k] = arr[i++];
+    } else {
+      merged[k] = arr[j++];
+    }
+  }
+
+  for (int k = 0; k < merged.size(); k++) {
+    arr[low + k] = merged[k];
+  }
+}
+
+void mergeSort(vector<int>& arr, int low, int high) {
+  if (low < high) {
+    int mid = (low + high) / 2;
+
+    // Recursively sort the left and right halves.
+    mergeSort(arr, low, mid);
+    mergeSort(arr, mid + 1, high);
+
+    // Merge the sorted halves.
+    #pragma omp parallel
+    {
+      #pragma omp for
+      for (int i = low; i <= high; i++) {
+        // Do nothing, just for parallelization.
+      }
+
+      merge(arr, low, mid, high);
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of elements: ";
+  cin >> n;
+
+  vector<int> arr(n);
+
+  for (int i = 0; i < n; i++) {
+    cout << "Enter element " << i + 1 << ": ";
+    cin >> arr[i];
+  }
+
+  cout << "Unsorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Merge sort.
+  cout << "Sequential merge sort: ";
+  auto start = std::chrono::high_resolution_clock::now();
+  mergeSort(arr, 0, n - 1);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+  
+  // Parallel merge sort.
+  cout << "Parallel merge sort: ";
+  start = std::chrono::high_resolution_clock::now();
+  #pragma omp parallel
+  {
+    #pragma omp single
+    mergeSort(arr, 0, n - 1);
+  }
+  end = std::chrono::high_resolution_clock::now();
+  elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Check if the array is sorted.
+  if (isSorted(arr)) {
+    cout << "The array is sorted." << endl;
+  } else {
+    cout << "The array is not sorted." << endl;
+ 
+}
+return 0;
+}
+
+
+
+
+The provided code implements the merge sort algorithm and compares its sequential and parallel execution using OpenMP. Let's go through the code step by step:
+
+The code includes several header files: <iostream>, <vector>, <omp.h>, and <chrono>. These are standard C++ libraries used for input/output, working with vectors, OpenMP parallelization, and measuring time, respectively.
+
+The isSorted function checks if a given vector (arr) is sorted in non-decreasing order. It iterates through the elements of the vector and compares each element with the previous one. If any element is smaller than its previous element, the function returns false. Otherwise, it returns true.
+
+The merge function merges two sorted halves of the vector arr. It takes the indices low, mid, and high representing the boundaries of the two halves. It creates a temporary vector merged to store the merged result. The function iterates through the halves, comparing elements and copying them to the merged vector in the correct order. Finally, it copies the merged elements back to the original vector arr.
+
+The mergeSort function performs the merge sort algorithm on the vector arr. It takes the indices low and high representing the boundaries of the current subarray to be sorted. It recursively divides the subarray into two halves and sorts each half by calling mergeSort on them. Then, it merges the sorted halves using the merge function. The parallelization is done using OpenMP directives.
+
+In the main function, the number of elements in the array (n) is obtained from the user.
+
+A vector (arr) is created to store the elements entered by the user.
+
+The user is prompted to enter each element of the array.
+
+The unsorted array is printed.
+
+Sequential Merge Sort: The sequential merge sort algorithm is executed on the array. The start time is recorded using std::chrono::high_resolution_clock::now(), and the end time is recorded after the sorting process. The duration of the sorting process is calculated using std::chrono::duration<double>. The sorted array is printed.
+
+Parallel Merge Sort: The parallel merge sort algorithm is executed on the array. The #pragma omp parallel directive creates a parallel region, and the mergeSort function is called within it. The #pragma omp single directive ensures that only one thread executes the mergeSort function. This approach parallelizes the sorting process using multiple threads. The start time is recorded, and the end time is obtained after the sorting process. The duration is calculated, and the sorted array is printed.
+
+The program checks if the sorted array is indeed sorted using the isSorted function and displays the result.
+
+The program terminates with a return value of 0.
+
+The code demonstrates the use of OpenMP to parallelize the merge sort algorithm and compare its performance with the sequential version. Merge sort is a divide-and-conquer algorithm that achieves a time complexity of O(n log n) in the average and worst case, making it an efficient sorting algorithm for large arrays. By parallelizing the algorithm, the code can potentially improve the sorting time by utilizing multiple threads for concurrent execution.

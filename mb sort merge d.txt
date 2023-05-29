@@ -1,0 +1,215 @@
+//msort
+
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <chrono>
+
+using namespace std;
+
+bool isSorted(const vector<int>& arr) {
+  int n = arr.size();
+  for (int i = 1; i < n; i++) {
+    if (arr[i] < arr[i - 1]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+void merge(vector<int>& arr, int low, int mid, int high) {
+  int i = low;
+  int j = mid + 1;
+  vector<int> merged(high - low + 1);
+
+  for (int k = 0; k < merged.size(); k++) {
+    if (i > mid) {
+      merged[k] = arr[j++];
+    } else if (j > high) {
+      merged[k] = arr[i++];
+    } else if (arr[i] <= arr[j]) {
+      merged[k] = arr[i++];
+    } else {
+      merged[k] = arr[j++];
+    }
+  }
+
+  for (int k = 0; k < merged.size(); k++) {
+    arr[low + k] = merged[k];
+  }
+}
+
+void mergeSort(vector<int>& arr, int low, int high) {
+  if (low < high) {
+    int mid = (low + high) / 2;
+
+    // Recursively sort the left and right halves.
+    mergeSort(arr, low, mid);
+    mergeSort(arr, mid + 1, high);
+
+    // Merge the sorted halves.
+    #pragma omp parallel
+    {
+      #pragma omp for
+      for (int i = low; i <= high; i++) {
+        // Do nothing, just for parallelization.
+      }
+
+      merge(arr, low, mid, high);
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of elements: ";
+  cin >> n;
+
+  vector<int> arr(n);
+
+  for (int i = 0; i < n; i++) {
+    cout << "Enter element " << i + 1 << ": ";
+    cin >> arr[i];
+  }
+
+  cout << "Unsorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Merge sort.
+  cout << "Sequential merge sort: ";
+  auto start = std::chrono::high_resolution_clock::now();
+  mergeSort(arr, 0, n - 1);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+  
+  // Parallel merge sort.
+  cout << "Parallel merge sort: ";
+  start = std::chrono::high_resolution_clock::now();
+  #pragma omp parallel
+  {
+    #pragma omp single
+    mergeSort(arr, 0, n - 1);
+  }
+  end = std::chrono::high_resolution_clock::now();
+  elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Check if the array is sorted.
+  if (isSorted(arr)) {
+    cout << "The array is sorted." << endl;
+  } else {
+    cout << "The array is not sorted." << endl;
+ 
+}
+return 0;
+}
+
+// bsort
+
+#include <iostream>
+#include <vector>
+#include <omp.h>
+#include <chrono>
+
+using namespace std;
+
+void bubbleSort(vector<int>& arr) {
+  int n = arr.size();
+
+  #pragma omp parallel for
+  for (int i = 0; i < n - 1; i++) {
+    for (int j = 0; j < n - i - 1; j++) {
+      if (arr[j] > arr[j + 1]) {
+        int temp = arr[j];
+        arr[j] = arr[j + 1];
+        arr[j + 1] = temp;
+      }
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of elements: ";
+  cin >> n;
+
+  vector<int> arr(n);
+
+  for (int i = 0; i < n; i++) {
+    cout << "Enter element " << i + 1 << ": ";
+    cin >> arr[i];
+  }
+
+  cout << "Unsorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Bubble sort.
+  cout << "Sequential bubble sort: ";
+  auto start = std::chrono::high_resolution_clock::now();
+  bubbleSort(arr);
+  auto end = std::chrono::high_resolution_clock::now();
+  std::chrono::duration<double> elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+  
+  cout << "Sorted array: ";
+  for (int i = 0; i < n; i++) {
+    cout << arr[i] << " ";
+  }
+  cout << endl;
+
+  // Parallel bubble sort.
+  cout << "Parallel bubble sort: ";
+  start = std::chrono::high_resolution_clock::now();
+  #pragma omp parallel
+  bubbleSort(arr);
+  end = std::chrono::high_resolution_clock::now();
+  elapsed = end - start;
+  cout << elapsed.count() << " seconds" << endl;
+
+  return 0;
+}
+
+
+
+
+
+The provided code includes two sorting algorithms: Merge Sort and Bubble Sort, implemented using OpenMP for parallel execution. Here's an explanation of each code snippet:
+
+msort (Merge Sort):
+
+The code begins by including the necessary libraries: <iostream>, <vector>, <omp.h>, and <chrono>.
+The isSorted function checks if a given vector arr is sorted in ascending order by iterating over the elements and comparing adjacent pairs.
+The merge function merges two sorted halves of the array into a single sorted array.
+The mergeSort function recursively divides the array into two halves, calls itself for each half, and then merges the sorted halves using OpenMP directives for parallelization.
+In the main function:
+The user is prompted to enter the number of elements and the elements themselves.
+The unsorted array is displayed.
+Sequential merge sort is performed, measuring the execution time using <chrono>.
+Parallel merge sort is performed using OpenMP directives, measuring the execution time.
+The sorted array is displayed.
+The isSorted function is used to check if the array is sorted, and the result is printed.
+
+bsort (Bubble Sort):
+
+The code follows a similar structure as the previous one, but it implements the Bubble Sort algorithm.
+The bubbleSort function sorts the array by repeatedly swapping adjacent elements if they are in the wrong order.
+In the main function:
+The user is prompted to enter the number of elements and the elements themselves.
+The unsorted array is displayed.
+Sequential bubble sort is performed, measuring the execution time.
+The sorted array is displayed.
+Parallel bubble sort is performed using OpenMP directives, measuring the execution time.
+Both snippets allow the user to input an array of integers, perform the sorting algorithm (either Merge Sort or Bubble Sort), measure the execution time for sequential and parallel versions, and display the sorted array.

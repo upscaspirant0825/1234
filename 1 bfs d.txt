@@ -1,0 +1,119 @@
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+struct Node {
+  int id;
+  vector<int> neighbors;
+  bool visited;
+
+  Node(int id) {
+    this->id = id;
+    visited = false;
+  }
+};
+
+void bfs(vector<Node> &nodes, int start) {
+  queue<int> queue;
+  queue.push(start);
+
+  while (!queue.empty()) {
+    int current = queue.front();
+    queue.pop();
+
+    cout << current << " ";
+
+    #pragma omp parallel for
+    for (int neighbor : nodes[current].neighbors) {
+      if (!nodes[neighbor].visited) {
+        nodes[neighbor].visited = true;
+        queue.push(neighbor);
+      }
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of nodes: ";
+  cin >> n;
+
+  vector<Node> nodes;
+
+  for (int i = 0; i < n; i++) {
+    nodes.push_back(Node(i));
+  }
+
+  for (int i = 0; i < n; i++) {
+    int num_neighbors;
+    cout << "Enter the number of neighbors for node " << i + 1 << ": ";
+    cin >> num_neighbors;
+
+    for (int j = 0; j < num_neighbors; j++) {
+      int neighbor;
+      cout << "Enter the neighbor " << j + 1 << " for node " << i + 1 << ": ";
+      cin >> neighbor;
+
+      nodes[i].neighbors.push_back(neighbor);
+    }
+  }
+
+  nodes[0].visited = true;
+
+  bfs(nodes, 0);
+
+  cout << endl;
+
+  return 0;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+The provided code is an implementation of the breadth-first search (BFS) algorithm using OpenMP for parallelization. Let's go through the code step by step:
+
+The code includes several header files: <iostream>, <vector>, <queue>, and <omp.h>. These are standard C++ libraries used for input/output, working with vectors and queues, and OpenMP parallelization, respectively.
+
+The Node struct represents a node in the graph. It contains an id to uniquely identify the node, a neighbors vector to store the IDs of its neighboring nodes, and a visited flag to track whether the node has been visited during the BFS traversal.
+
+The bfs function performs the breadth-first search traversal of the graph starting from a given node (start). It takes a reference to a vector of nodes (nodes) as input.
+
+Inside the bfs function, a queue (queue) is created to store the IDs of the nodes to visit. The start node is pushed into the queue to initiate the traversal.
+
+The while loop continues until the queue becomes empty. In each iteration, the front element (current) is removed from the queue and printed.
+
+The #pragma omp parallel for directive is used to parallelize the loop that iterates over the neighbors of the current node. OpenMP is a directive-based API for parallel programming in C/C++, and the parallel for directive distributes the iterations of the loop among multiple threads for concurrent execution. Each thread executes a subset of the loop iterations.
+
+Inside the parallel loop, if a neighbor node (neighbor) has not been visited, it is marked as visited (nodes[neighbor].visited = true) and added to the queue (queue.push(neighbor)).
+
+In the main function, the number of nodes in the graph (n) is obtained from the user.
+
+A vector of Node objects (nodes) is created to represent the graph.
+
+Two for loops are used to populate the graph. For each node, the number of neighbors is obtained from the user, and then the neighbor IDs are collected by iterating over the number of neighbors.
+
+The visited flag of the first node (nodes[0].visited) is set to true to mark it as visited.
+
+Finally, the bfs function is called with the nodes vector and the start node ID (0) to perform the BFS traversal.
+
+The resulting BFS traversal sequence is printed.
+
+The program terminates with a return value of 0.
+
+The code uses OpenMP to parallelize the process of exploring the neighbors of each node, potentially speeding up the BFS traversal on systems with multiple CPU cores. However, it's important to note that parallelizing a BFS algorithm is not always straightforward, and the correctness of the parallel implementation needs to be ensured to avoid data races or incorrect results.

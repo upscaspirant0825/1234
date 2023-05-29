@@ -1,0 +1,173 @@
+// bfs
+
+#include <iostream>
+#include <vector>
+#include <queue>
+#include <omp.h>
+
+using namespace std;
+
+struct Node {
+  int id;
+  vector<int> neighbors;
+  bool visited;
+
+  Node(int id) {
+    this->id = id;
+    visited = false;
+  }
+};
+
+void bfs(vector<Node> &nodes, int start) {
+  queue<int> queue;
+  queue.push(start);
+
+  while (!queue.empty()) {
+    int current = queue.front();
+    queue.pop();
+
+    cout << current << " ";
+
+    #pragma omp parallel for
+    for (int neighbor : nodes[current].neighbors) {
+      if (!nodes[neighbor].visited) {
+        nodes[neighbor].visited = true;
+        queue.push(neighbor);
+      }
+    }
+  }
+}
+
+int main() {
+  int n;
+  cout << "Enter the number of nodes: ";
+  cin >> n;
+
+  vector<Node> nodes;
+
+  for (int i = 0; i < n; i++) {
+    nodes.push_back(Node(i));
+  }
+
+  for (int i = 0; i < n; i++) {
+    int num_neighbors;
+    cout << "Enter the number of neighbors for node " << i + 1 << ": ";
+    cin >> num_neighbors;
+
+    for (int j = 0; j < num_neighbors; j++) {
+      int neighbor;
+      cout << "Enter the neighbor " << j + 1 << " for node " << i + 1 << ": ";
+      cin >> neighbor;
+
+      nodes[i].neighbors.push_back(neighbor);
+    }
+  }
+
+  nodes[0].visited = true;
+
+  bfs(nodes, 0);
+
+  cout << endl;
+
+  return 0;
+}
+
+
+// dfs
+
+#include <iostream>
+#include <vector>
+#include <stack>
+#include <omp.h>
+
+void parallelDFS(const std::vector<std::vector<int> >& graph, int startVertex, std::vector<bool>& visited) {
+    std::stack<int> dfsStack;
+    dfsStack.push(startVertex);
+    
+    while (!dfsStack.empty()) {
+        int currentVertex = dfsStack.top();
+        dfsStack.pop();
+        
+        if (!visited[currentVertex]) {
+            std::cout << "Visiting vertex: " << currentVertex << std::endl;
+            visited[currentVertex] = true;
+            
+            #pragma omp parallel for num_threads(4)
+            for (int i = 0; i < graph[currentVertex].size(); ++i) {
+                int neighborVertex = graph[currentVertex][i];
+                if (!visited[neighborVertex]) {
+                    #pragma omp critical
+                    dfsStack.push(neighborVertex);
+                }
+            }
+        }
+    }
+}
+
+int main() {
+    int numVertices;
+    std::cout << "Enter the number of vertices: ";
+    std::cin >> numVertices;
+    
+    std::vector<std::vector<int> > graph(numVertices);
+     
+    std::cout << "Enter the adjacency list for each vertex:\n";
+    for (int i = 0; i < numVertices; ++i) {
+        int numNeighbors;
+        std::cout << "Enter the number of neighbors for vertex " << i << ": ";
+        std::cin >> numNeighbors;
+        
+        std::cout << "Enter the neighbors for vertex " << i << ": ";
+        for (int j = 0; j < numNeighbors; ++j) {
+            int neighborVertex;
+            std::cin >> neighborVertex;
+            graph[i].push_back(neighborVertex);
+        }
+    }
+    
+    int startVertex;
+    std::cout << "Enter the start vertex: ";
+    std::cin >> startVertex;
+    
+    std::vector<bool> visited(numVertices, false);
+    
+    #pragma omp parallel
+    {
+        #pragma omp single
+        {
+            parallelDFS(graph, startVertex, visited);
+        }
+    }
+    
+    return 0;
+}
+
+
+
+
+The provided code consists of two parts: Breadth-First Search (BFS) and Depth-First Search (DFS) algorithms implemented using OpenMP parallelization. Let's go through each part separately:
+
+BFS (Breadth-First Search):
+
+The code begins by defining a struct called Node, which represents a node in the graph. It contains an ID, a list of neighbors, and a flag to track if the node has been visited.
+The bfs function takes a vector of Node objects and a starting node ID as input and performs a breadth-first search traversal of the graph.
+Inside the bfs function, a queue is used to store the nodes to be visited. The starting node is pushed into the queue initially.
+The while loop continues until the queue is empty. In each iteration, the front element of the queue is retrieved and processed.
+The current node's ID is printed, and then, using OpenMP parallelization (#pragma omp parallel for), the neighbors of the current node are visited in parallel.
+If a neighbor has not been visited, it is marked as visited, and its ID is added to the queue for further exploration.
+This process continues until all reachable nodes have been visited.
+DFS (Depth-First Search):
+
+The code starts by defining the parallelDFS function, which performs a depth-first search traversal of the graph.
+The function takes a vector of vectors (graph) representing the adjacency list, the ID of the starting vertex, and a vector of boolean values (visited) to keep track of visited vertices.
+Inside the parallelDFS function, a stack is used to store the vertices to be visited. The starting vertex is pushed onto the stack initially.
+The while loop continues until the stack is empty. In each iteration, the top element of the stack is retrieved and processed.
+If the current vertex has not been visited, it is marked as visited, and its ID is printed.
+Using OpenMP parallelization (#pragma omp parallel for), the neighbors of the current vertex are explored in parallel. The #pragma omp critical directive ensures that the stack is accessed in a thread-safe manner to avoid race conditions.
+The process continues until all reachable vertices have been visited.
+In the main function, the number of vertices is obtained from the user, and the adjacency list of the graph is populated accordingly.
+The starting vertex is also taken as input from the user.
+A vector of boolean values (visited) is initialized to track visited vertices.
+The parallelDFS function is called using OpenMP parallelization (#pragma omp parallel) to perform the depth-first search traversal.
+The program terminates with a return value of 0.
+Both BFS and DFS are classic graph traversal algorithms used to explore graphs and visit all the nodes/vertices. The OpenMP parallelization in these algorithms allows for concurrent exploration of different branches of the graph, potentially improving performance on systems with multiple cores or threads.
